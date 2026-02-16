@@ -1,8 +1,13 @@
 return {
 	"coder/claudecode.nvim",
 	dependencies = { "folke/snacks.nvim" },
+	event = "VeryLazy",
 	config = function(_, opts)
 		require("claudecode").setup(opts)
+
+		vim.schedule(function()
+			vim.cmd("ClaudeCode")
+		end)
 
 		-- Custom function to send and focus
 		vim.keymap.set("v", "<leader>i", function()
