@@ -27,7 +27,7 @@ return {
 		{ "<leader>ad", "<cmd>ClaudeCodeDiffDeny<cr>", desc = "Deny diff" },
 	},
 	opts = {
-		terminal_cmd = "claude --dangerously-skip-permissions --continue",
+		terminal_cmd = "claude --dangerously-skip-permissions",
 		terminal = {
 			provider = "snacks",
 			snacks_win_opts = {
