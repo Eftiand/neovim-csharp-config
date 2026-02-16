@@ -9,6 +9,17 @@ return {
 			vim.cmd("ClaudeCode")
 		end)
 
+		-- Close terminal buffers on quit so :qa works cleanly
+		vim.api.nvim_create_autocmd("QuitPre", {
+			callback = function()
+				for _, buf in ipairs(vim.api.nvim_list_bufs()) do
+					if vim.api.nvim_buf_is_valid(buf) and vim.bo[buf].buftype == "terminal" then
+						vim.api.nvim_buf_delete(buf, { force = true })
+					end
+				end
+			end,
+		})
+
 		-- Custom function to send and focus
 		vim.keymap.set("v", "<leader>i", function()
 			vim.cmd("ClaudeCodeSend")
