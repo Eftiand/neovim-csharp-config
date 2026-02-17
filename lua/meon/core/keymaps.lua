@@ -1,5 +1,26 @@
 vim.g.mapleader = " "
 
+-- Load user settings from settings.json
+local settings_path = vim.fn.stdpath("config") .. "/settings.json"
+local function load_settings()
+  local f = io.open(settings_path, "r")
+  if not f then return {} end
+  local content = f:read("*a")
+  f:close()
+  local ok, data = pcall(vim.json.decode, content)
+  return ok and data or {}
+end
+
+local function save_settings(tbl)
+  local f = io.open(settings_path, "w")
+  if not f then return end
+  f:write(vim.json.encode(tbl))
+  f:close()
+end
+
+local settings = load_settings()
+vim.g.ai_assistant = settings.ai_assistant or "claude"
+
 local keymap = vim.keymap
 
 keymap.set("i", "jk", "<ESC>", { desc = "Exit insert mode with jk" })
@@ -7,6 +28,23 @@ keymap.set("n", "<leader>nh", ":nohl<CR>", { desc = "Clear search highlights" })
 
 keymap.set("n", "<leader>+", "<C-a>", { desc = "Increment number" }) -- increment
 keymap.set("n", "<leader>-", "<C-x>", { desc = "Decrement number" }) -- decrement
+
+-- AI assistant toggle (<leader><space> opens active, <leader>as switches)
+keymap.set({ "n", "v" }, "<leader><space>", function()
+  if vim.g.ai_assistant == "opencode" then
+    require("opencode").toggle()
+  else
+    vim.cmd("ClaudeCode")
+  end
+end, { desc = "Toggle AI assistant" })
+
+keymap.set("n", "<leader>as", function()
+  vim.g.ai_assistant = vim.g.ai_assistant == "claude" and "opencode" or "claude"
+  local s = load_settings()
+  s.ai_assistant = vim.g.ai_assistant
+  save_settings(s)
+  vim.notify("AI assistant: " .. vim.g.ai_assistant, vim.log.levels.INFO)
+end, { desc = "Switch AI assistant (claude/opencode)" })
 
 -- Reload config
 keymap.set("n", "<leader>rr", "<cmd>source ~/.config/nvim/init.lua<CR>", { desc = "Reload Neovim config" })
