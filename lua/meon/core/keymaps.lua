@@ -29,14 +29,28 @@ keymap.set("n", "<leader>nh", ":nohl<CR>", { desc = "Clear search highlights" })
 keymap.set("n", "<leader>+", "<C-a>", { desc = "Increment number" }) -- increment
 keymap.set("n", "<leader>-", "<C-x>", { desc = "Decrement number" }) -- decrement
 
--- AI assistant toggle (<leader><space> opens active, <leader>as switches)
-keymap.set({ "n", "v" }, "<leader><space>", function()
+-- AI assistant toggle (<leader><Esc> opens active, <leader>as switches)
+local function toggle_ai()
   if vim.g.ai_assistant == "opencode" then
     require("opencode").toggle()
   else
     vim.cmd("ClaudeCode")
   end
-end, { desc = "Toggle AI assistant" })
+end
+keymap.set({ "n", "v" }, "<leader><Esc>", toggle_ai, { desc = "Toggle AI assistant" })
+keymap.set({ "n", "v" }, "<leader><space>", toggle_ai, { desc = "Toggle AI assistant" })
+
+keymap.set("x", "<leader>i", function()
+  if vim.g.ai_assistant == "opencode" then
+    return require("opencode").operator("@this ")
+  else
+    vim.cmd("ClaudeCodeSend")
+    vim.schedule(function()
+      vim.cmd("ClaudeCodeFocus")
+    end)
+    return ""
+  end
+end, { expr = true, desc = "Send selection to AI assistant" })
 
 keymap.set("n", "<leader>as", function()
   vim.g.ai_assistant = vim.g.ai_assistant == "claude" and "opencode" or "claude"
