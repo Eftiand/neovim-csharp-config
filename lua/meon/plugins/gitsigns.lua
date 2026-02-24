@@ -2,6 +2,7 @@ return {
 	"lewis6991/gitsigns.nvim",
 	event = { "BufReadPre", "BufNewFile" },
 	opts = {
+		signs_staged_enable = true,
 		on_attach = function(bufnr)
 			local gs = package.loaded.gitsigns
 
@@ -10,8 +11,8 @@ return {
 			end
 
 			-- Navigation
-			map("n", "<leader>gn", gs.next_hunk, "Next Hunk")
-			map("n", "<leader>gN", gs.prev_hunk, "Prev Hunk")
+			map("n", "<leader>gn", function() gs.next_hunk({ target = "all" }) end, "Next Hunk")
+			map("n", "<leader>gN", function() gs.prev_hunk({ target = "all" }) end, "Prev Hunk")
 
 			-- Actions
 			map("n", "<leader>gs", gs.stage_hunk, "Stage hunk")
