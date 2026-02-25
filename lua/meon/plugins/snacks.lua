@@ -6,7 +6,7 @@ return {
 	opts = {
 		bigfile = { enabled = true },
 		dashboard = { enabled = true },
-		indent = { enabled = true },
+		indent = { enabled = true, scope = { enabled = false } },
 		input = { enabled = false }, -- Using fzf-lua for vim.ui.select
 		notifier = {
 			enabled = true,

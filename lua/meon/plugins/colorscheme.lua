@@ -27,6 +27,7 @@ return {
 				["@lsp.type.property"] = { fg = "$red" },
 				["@lsp.type.parameter"] = { fg = "$dark_yellow" },
 				["@lsp.type.interface"] = { fg = "$orange" },
+				["@lsp.type.function"] = { fg = "$blue" },
 				["@keyword.modifier.c_sharp"] = { fg = "$purple" },
 				["@type.builtin"] = { fg = "$purple" },
 				["@constant.builtin"] = { fg = "$purple" },
@@ -47,7 +48,13 @@ return {
 				["@attribute"] = { fg = "$red" },
 				["@function.call.python"] = { fg = "$blue" },
 				["@function.method.call.python"] = { fg = "$blue" },
-				["@attribute.python"] = { fg = "$red" },
+				["@function.python"] = { fg = "$blue" },
+				["@function.method.python"] = { fg = "$blue" },
+				["@type.python"] = { fg = "$yellow" },
+				["@constant.builtin.python"] = { fg = "$orange" },
+				["@attribute.python"] = { fg = "$blue" },
+				["@constructor.python"] = { fg = "$yellow" },
+				["@variable.builtin.python"] = { fg = "$dark_yellow" },
 			},
 		})
 		vim.cmd("colorscheme onedark")
