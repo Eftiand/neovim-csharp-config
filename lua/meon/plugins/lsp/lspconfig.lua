@@ -25,12 +25,6 @@ return {
 		vim.api.nvim_create_autocmd("LspAttach", {
 			group = vim.api.nvim_create_augroup("UserLspConfig", {}),
 			callback = function(ev)
-				-- Disable semantic tokens for ty only (preserves treesitter for Python)
-				local client = vim.lsp.get_client_by_id(ev.data.client_id)
-				if client and client.name == "ty" then
-					client.server_capabilities.semanticTokensProvider = nil
-				end
-
 				-- Buffer local mappings
 				local opts = { buffer = ev.buf, silent = true }
 

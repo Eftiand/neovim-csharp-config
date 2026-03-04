@@ -35,7 +35,7 @@ return {
 				"ts_ls", -- TypeScript/JavaScript
 				"cssls", -- CSS
 				"html", -- HTML
-				"ty", -- Python
+				"pyright", -- Python
 				"gopls", -- Go
 			},
 		})
