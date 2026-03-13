@@ -97,6 +97,92 @@ vim.api.nvim_create_autocmd("TermOpen", {
   end,
 })
 
+-- JSON: convert class/object properties to JSON object (visual selection, language-agnostic)
+local modifiers = {
+  "public", "private", "protected", "internal", "static", "virtual", "abstract",
+  "override", "readonly", "sealed", "extern", "new", "val", "var", "let", "const",
+  "def", "final", "open", "suspend", "inline", "required", "optional", "lateinit",
+}
+
+local skip_patterns = { "^{", "^}", "class%s", "interface%s", "struct%s", "enum%s", "record%s" }
+
+local function extract_prop_name(line)
+  line = line:match("^%s*(.-)%s*$")
+  if line == "" then return nil end
+  for _, pat in ipairs(skip_patterns) do
+    if line:match(pat) then return nil end
+  end
+
+  -- Strip trailing block/getter syntax and semicolons
+  line = line:gsub("{%s*get.*", ""):gsub("{%s*set.*", ""):gsub(";.*", ""):gsub("{.*", "")
+  -- Strip trailing punctuation (commas, colons after type, etc.)
+  line = line:match("^%s*(.-)%s*$")
+
+  -- Strip leading access modifiers
+  local changed = true
+  while changed do
+    changed = false
+    for _, mod in ipairs(modifiers) do
+      local stripped = line:match("^" .. mod .. "%s+(.*)")
+      if stripped then line = stripped; changed = true end
+    end
+  end
+  line = line:match("^%s*(.-)%s*$")
+
+  -- name: Type  (TypeScript, Python, Kotlin, Rust)
+  local name = line:match("^([%a_][%w_]*)%s*:")
+  if name then return name end
+
+  -- Type name  (C#, Java, Go — two tokens, name is last)
+  name = line:match("^[%a_][%w_.<>%[%]%?%*,%%]+%s+([%a_][%w_]*)%s*$")
+  if name then return name end
+
+  -- name = ...  (assignments)
+  name = line:match("^([%a_][%w_]*)%s*[=%(]")
+  if name then return name end
+
+  -- bare single identifier
+  name = line:match("^([%a_][%w_]*)%s*$")
+  return name
+end
+
+local function class_to_json()
+  local start_line = vim.fn.line("'<")
+  local end_line = vim.fn.line("'>")
+  local lines = vim.api.nvim_buf_get_lines(0, start_line - 1, end_line, false)
+
+  local props = {}
+  for _, line in ipairs(lines) do
+    local name = extract_prop_name(line)
+    if name then
+      table.insert(props, string.format('  "%s": null', name))
+    end
+  end
+
+  if #props == 0 then
+    vim.notify("No properties found in selection", vim.log.levels.WARN)
+    return
+  end
+
+  local result = { "{" }
+  for i, p in ipairs(props) do
+    table.insert(result, p .. (i < #props and "," or ""))
+  end
+  table.insert(result, "}")
+
+  vim.cmd("vnew")
+  vim.bo.buftype = "nofile"
+  vim.bo.filetype = "json"
+  vim.api.nvim_buf_set_lines(0, 0, -1, false, result)
+end
+
+keymap.set("v", "<leader>jo", function()
+  vim.api.nvim_feedkeys(vim.api.nvim_replace_termcodes("<Esc>", true, false, true), "x", false)
+  class_to_json()
+end, { desc = "Convert class properties to JSON" })
+
+
+
 -- Build
 keymap.set("n", "<leader>bp", function()
   local tasks_path = vim.fn.getcwd() .. "/.vscode/tasks.json"
