@@ -26,12 +26,16 @@ return {
 	config = function()
 		---@type opencode.Opts
 		vim.g.opencode_opts = {
-			provider = {
-				snacks = {
-					win = {
-						position = "left",
-						width = 0.33,
-					}, },
+			server = {
+				start = function()
+					require("opencode.terminal").start("opencode --port", { split = "left" })
+				end,
+				stop = function()
+					require("opencode.terminal").stop()
+				end,
+				toggle = function()
+					require("opencode.terminal").toggle("opencode --port", { split = "left" })
+				end,
 			},
 		}
 
