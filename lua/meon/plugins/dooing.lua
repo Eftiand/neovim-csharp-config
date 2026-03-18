@@ -1,5 +1,6 @@
 return {
     "atiladefreitas/dooing",
+    keys = { "<leader>st", "<leader>sT" },
     config = function()
         require("dooing").setup({
             window = {

@@ -1,5 +1,9 @@
 vim.cmd("let g:netrw_liststyle = 3")
 
+-- Disable slow built-in matchparen (bracket highlighting on every cursor move)
+-- Profile showed it accounts for ~95% of editing overhead (261 calls, 0.042s)
+vim.g.loaded_matchparen = 1
+
 local opt = vim.opt
 
 -- Store more recent files in shada
@@ -55,7 +59,7 @@ vim.api.nvim_create_autocmd({ "InsertLeave", "FocusLost" }, {
 
 -- Auto-reload files when changed externally
 opt.autoread = true
-vim.api.nvim_create_autocmd({ "FocusGained", "BufEnter", "CursorHold", "CursorHoldI" }, {
+vim.api.nvim_create_autocmd({ "FocusGained", "BufEnter" }, {
 	pattern = "*",
 	command = "checktime",
 })

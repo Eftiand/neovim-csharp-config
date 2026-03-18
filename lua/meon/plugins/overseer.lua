@@ -1,5 +1,7 @@
 return {
   "stevearc/overseer.nvim",
+  cmd = { "OverseerToggle", "OverseerTaskAction", "LaunchTask" },
+  keys = { "<leader>or", "<leader>ot", "<leader>oa" },
   config = function()
     local overseer = require("overseer")
     local json_decode = require("meon.util.json5").decode

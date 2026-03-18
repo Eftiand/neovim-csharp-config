@@ -1,6 +1,7 @@
 return {
 	{
 		"voldikss/vim-floaterm",
+		cmd = { "FloatermToggle", "FloatermNew", "T" },
 		config = function()
 			-- Set terminal size and position
 			vim.g.floaterm_position = "center" -- Center the terminal
