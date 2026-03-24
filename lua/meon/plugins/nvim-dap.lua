@@ -64,7 +64,10 @@ return {
           dap.configurations[ft] = {}
         end
       end
-      vscode.load_launchjs(nil, type_to_filetypes)
+      local launch_path = vim.fn.getcwd() .. "/.vscode/launch.json"
+      if vim.fn.filereadable(launch_path) == 1 then
+        vscode.load_launchjs(launch_path, type_to_filetypes)
+      end
     end
 
     -- Load on first use of F5, not on startup

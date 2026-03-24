@@ -24,8 +24,7 @@ return {
     end
 
     local function load_launch_json()
-      local root = get_project_root()
-      local launch_path = root .. "/.vscode/launch.json"
+      local launch_path = vim.fn.getcwd() .. "/.vscode/launch.json"
       if vim.fn.filereadable(launch_path) == 0 then
         return nil
       end

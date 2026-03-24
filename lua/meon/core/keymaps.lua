@@ -184,7 +184,14 @@ end, { desc = "Convert class properties to JSON" })
 
 
 -- Build
+local _build_job_id = nil
 keymap.set("n", "<leader>bp", function()
+  -- Kill any existing build job before starting a new one
+  if _build_job_id then
+    vim.fn.jobstop(_build_job_id)
+    _build_job_id = nil
+  end
+
   local tasks_path = vim.fn.getcwd() .. "/.vscode/tasks.json"
   local cmd = nil
 
@@ -228,7 +235,7 @@ keymap.set("n", "<leader>bp", function()
   _G.build_status.level = "info"
   vim.cmd("redrawstatus")
 
-  vim.fn.jobstart(cmd, {
+  _build_job_id = vim.fn.jobstart(cmd, {
     stdout_buffered = true,
     stderr_buffered = true,
     on_stdout = function(_, data)
@@ -238,6 +245,7 @@ keymap.set("n", "<leader>bp", function()
       if data then vim.list_extend(output, data) end
     end,
     on_exit = function(_, code)
+      _build_job_id = nil
       local elapsed = (vim.uv.hrtime() - start_time) / 1e9
       vim.schedule(function()
         -- Parse dotnet build output: path/file.cs(line,col): error CS1234: message
@@ -269,3 +277,19 @@ keymap.set("n", "<leader>bp", function()
     end,
   })
 end, { desc = "Build project" })
+
+-- Performance profiling toggle
+local _profile_active = false
+keymap.set("n", "<leader>pp", function()
+  if not _profile_active then
+    _profile_active = true
+    vim.cmd("profile start /tmp/nvim-profile.log")
+    vim.cmd("profile func *")
+    vim.cmd("profile file *")
+    vim.notify("Profiling started — press <leader>pp again to stop", vim.log.levels.INFO)
+  else
+    _profile_active = false
+    vim.cmd("profile stop")
+    vim.notify("Profiling stopped — results at /tmp/nvim-profile.log", vim.log.levels.INFO)
+  end
+end, { desc = "Toggle performance profiling" })
