@@ -185,9 +185,21 @@ end, { desc = "Convert class properties to JSON" })
 
 -- Build
 local _build_job_id = nil
+local _build_status_timer = nil
 keymap.set("n", "<leader>bp", function()
-  -- Kill any existing build job before starting a new one
+  -- Cancel pending status-clear timer
+  if _build_status_timer then
+    _build_status_timer:stop()
+    _build_status_timer:close()
+    _build_status_timer = nil
+  end
+  -- Kill any existing build job + its entire process group (MSBuild/Roslyn children)
   if _build_job_id then
+    local pid = vim.fn.jobpid(_build_job_id)
+    if pid and pid > 0 then
+      local pgid = vim.trim(vim.fn.system("ps -o pgid= -p " .. pid))
+      if pgid ~= "" then vim.fn.system("kill -- -" .. pgid) end
+    end
     vim.fn.jobstop(_build_job_id)
     _build_job_id = nil
   end
@@ -238,6 +250,7 @@ keymap.set("n", "<leader>bp", function()
   _build_job_id = vim.fn.jobstart(cmd, {
     stdout_buffered = true,
     stderr_buffered = true,
+    env = { MSBUILDDISABLENODEREUSE = "1" },
     on_stdout = function(_, data)
       if data then vim.list_extend(output, data) end
     end,
@@ -267,7 +280,8 @@ keymap.set("n", "<leader>bp", function()
         vim.cmd("redrawstatus")
 
         -- Clear message after 5 seconds
-        vim.defer_fn(function()
+        _build_status_timer = vim.defer_fn(function()
+          _build_status_timer = nil
           if not _G.build_status.running then
             _G.build_status.message = ""
             vim.cmd("redrawstatus")
