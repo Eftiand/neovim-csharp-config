@@ -19,12 +19,12 @@ return {
 
     -- Minimal UI - scopes only at bottom
     dapui.setup({
-      expand_lines = true,
+      expand_lines = false,
       controls = { enabled = false },
       floating = { border = "rounded" },
       render = {
         max_type_length = 60,
-        max_value_lines = 200,
+        max_value_lines = 10,
       },
       layouts = {
         {
