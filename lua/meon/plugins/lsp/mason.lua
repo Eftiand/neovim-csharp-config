@@ -36,7 +36,7 @@ return {
 				"cssls", -- CSS
 				"html", -- HTML
 				"pyright", -- Python
-				"gopls", -- Go
+				--"gopls", -- Go
 			},
 		})
 		mason_tool_installer.setup({
@@ -48,7 +48,7 @@ return {
 				"stylua",
 				"ruff", -- Python linter + formatter
 				"debugpy", -- Python debugger
-				"delve", -- Go debugger
+				--"delve", -- Go debugger
 			},
 		})
 	end,
