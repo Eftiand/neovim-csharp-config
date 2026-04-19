@@ -6,6 +6,15 @@ vim.g.loaded_matchparen = 1
 
 local opt = vim.opt
 
+-- Faster UI responsiveness (CursorHold, gitsigns, diagnostics)
+opt.updatetime = 100
+opt.ttimeoutlen = 10
+
+-- Cache compiled Lua modules for faster startup
+if vim.loader then
+	vim.loader.enable()
+end
+
 -- Store more recent files in shada
 opt.shada = "!,'1000,<50,s10,h"
 
