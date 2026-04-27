@@ -9,6 +9,24 @@ return {
     "Issafalcon/neotest-dotnet",
   },
   config = function()
+    local dotnet_adapter = require("neotest-dotnet")({
+      dap = {
+        adapter_name = "netcoredbg",
+      },
+      discovery_root = "project",
+      dotnet_additional_args = {
+        "--no-build",
+      },
+    })
+
+    local original_results = dotnet_adapter.results
+    dotnet_adapter.results = function(spec, strategy_result, tree)
+      if not spec or not spec.context or not spec.context.results_path then
+        return {}
+      end
+      return original_results(spec, strategy_result, tree)
+    end
+
     require("neotest").setup({
       icons = {
         running_animated = { "⠋", "⠙", "⠹", "⠸", "⠼", "⠴", "⠦", "⠧", "⠇", "⠏" },
@@ -17,15 +35,7 @@ return {
         concurrent = false,
       },
       adapters = {
-        require("neotest-dotnet")({
-          dap = {
-            adapter_name = "netcoredbg",
-          },
-          discovery_root = "project",
-          dotnet_additional_args = {
-            "--no-build",
-          },
-        }),
+        dotnet_adapter,
       },
     })
 
