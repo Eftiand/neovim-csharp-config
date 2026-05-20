@@ -6,36 +6,54 @@ return {
     "nvim-lua/plenary.nvim",
     "antoinemadec/FixCursorHold.nvim",
     "nvim-treesitter/nvim-treesitter",
-    "Issafalcon/neotest-dotnet",
+    {
+      "Issafalcon/neotest-dotnet",
+      -- Upstream is unpatched for Neovim 0.11+: framework-discovery uses
+      -- iter_matches captures as single nodes, but 0.11+ returns them as lists,
+      -- which breaks test discovery. Re-applied after every install/update.
+      build = function(plugin)
+        local file = plugin.dir .. "/lua/neotest-dotnet/framework-discovery.lua"
+        local f = io.open(file, "r")
+        if not f then
+          return
+        end
+        local content = f:read("*a")
+        f:close()
+        content = content:gsub(
+          "local test_attribute = vim%.fn%.has%(\"nvim%-0%.9%.0\"%) == 1\n        and vim%.treesitter%.get_node_text%(captures%[1%], source%)\n      or vim%.treesitter%.query%.get_node_text%(captures%[1%], source%)",
+          "local capture = vim.fn.has(\"nvim-0.11\") == 1 and captures[1][1] or captures[1]\n    local test_attribute = vim.fn.has(\"nvim-0.9.0\") == 1\n        and vim.treesitter.get_node_text(capture, source)\n      or vim.treesitter.query.get_node_text(capture, source)"
+        )
+        local w = io.open(file, "w")
+        if w then
+          w:write(content)
+          w:close()
+        end
+      end,
+    },
   },
   config = function()
-    local dotnet_adapter = require("neotest-dotnet")({
-      dap = {
-        adapter_name = "netcoredbg",
-      },
-      discovery_root = "project",
-      dotnet_additional_args = {
-        "--no-build",
-      },
-    })
-
-    local original_results = dotnet_adapter.results
-    dotnet_adapter.results = function(spec, strategy_result, tree)
-      if not spec or not spec.context or not spec.context.results_path then
-        return {}
-      end
-      return original_results(spec, strategy_result, tree)
-    end
-
     require("neotest").setup({
+      log_level = vim.log.levels.DEBUG,
       icons = {
         running_animated = { "⠋", "⠙", "⠹", "⠸", "⠼", "⠴", "⠦", "⠧", "⠇", "⠏" },
       },
       running = {
         concurrent = false,
       },
+      discovery = {
+        -- These contain scaffolding/copies with [Test] files but no .csproj,
+        -- which make the dotnet adapter crash on a nil project root.
+        filter_dir = function(name)
+          return name ~= "templates" and name ~= "worktrees"
+        end,
+      },
       adapters = {
-        dotnet_adapter,
+        require("neotest-dotnet")({
+          dap = {
+            adapter_name = "netcoredbg",
+          },
+          discovery_root = "project",
+        }),
       },
     })
 

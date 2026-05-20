@@ -25,25 +25,14 @@ local ensure_installed = {
 return {
 	{
 		"nvim-treesitter/nvim-treesitter",
-		branch = "main",
+		branch = "master",
 		lazy = false,
 		build = ":TSUpdate",
 		config = function()
-			require("nvim-treesitter").install(ensure_installed)
-
-			local highlight_filetypes = vim.iter(ensure_installed)
-				:map(function(lang)
-					return vim.treesitter.language.get_filetypes(lang)
-				end)
-				:flatten()
-				:totable()
-
-			vim.api.nvim_create_autocmd("FileType", {
-				pattern = highlight_filetypes,
-				callback = function(args)
-					pcall(vim.treesitter.start, args.buf)
-					vim.bo[args.buf].indentexpr = "v:lua.require'nvim-treesitter'.indentexpr()"
-				end,
+			require("nvim-treesitter.configs").setup({
+				ensure_installed = ensure_installed,
+				highlight = { enable = true },
+				indent = { enable = true },
 			})
 		end,
 	},
