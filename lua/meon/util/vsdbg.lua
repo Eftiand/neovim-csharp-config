@@ -25,7 +25,7 @@ function M.handshake(self, request_payload)
 end
 
 function M.find_vsdbg()
-  local handle = io.popen("find ~/.vscode/extensions -path '*/ms-dotnettools.csharp-*/.debugger/arm64/vsdbg' 2>/dev/null | sort -r | head -1")
+  local handle = io.popen("find ~/.vscode/extensions -path '*/ms-dotnettools.csharp-*/.debugger/arm64/vsdbg' 2>/dev/null | sort -V -r | head -1")
   if handle then
     local result = handle:read("*a"):gsub("%s+$", "")
     handle:close()
