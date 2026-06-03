@@ -119,7 +119,8 @@ return {
 
     local function create_dap_task(name)
       local dap = require("dap")
-      local logfile = "/tmp/dap_overseer_" .. name:gsub("[^%w]", "_") .. "_" .. os.time() .. ".log"
+      local safe = name:gsub("[^%w]", "_")
+      local logfile = "/tmp/dap_overseer_" .. safe .. "_" .. os.time() .. ".log"
       vim.fn.writefile({}, logfile)
 
       local task = overseer.new_task({
@@ -128,17 +129,28 @@ return {
       })
       task:start()
 
-      local listener_id = "overseer_" .. name:gsub("[^%w]", "_")
+      -- Unique listener id so concurrent tasks don't clobber each other.
+      local listener_id = "overseer_" .. safe .. "_" .. os.time()
+      local my_session = nil
+      local finished = false
 
-      -- Kill DAP session when Overseer task is stopped
-      task:subscribe("on_dispose", function()
-        if dap.session() then
-          dap.terminate()
+      -- Bind this task to the FIRST session whose config name matches, then
+      -- match by session id. Without this, every handler fires for every
+      -- session and stopping one project cascades into the others.
+      local function owns(session)
+        if my_session then
+          return session.id == my_session.id
         end
-      end)
+        if session.config and session.config.name == name then
+          my_session = session
+          return true
+        end
+        return false
+      end
 
-      -- Pipe DAP console output to log file
-      dap.listeners.after.event_output[listener_id] = function(_, body)
+      -- Pipe ONLY this session's console output to the log file
+      dap.listeners.after.event_output[listener_id] = function(session, body)
+        if not owns(session) then return end
         if body.output then
           local f = io.open(logfile, "a")
           if f then
@@ -148,8 +160,10 @@ return {
         end
       end
 
-      -- Cleanup on terminate/exit
-      local function cleanup()
+      -- Cleanup on terminate/exit of THIS session only
+      local function cleanup(session)
+        if not owns(session) then return end
+        finished = true
         dap.listeners.after.event_output[listener_id] = nil
         dap.listeners.after.event_terminated[listener_id] = nil
         dap.listeners.after.event_exited[listener_id] = nil
@@ -159,6 +173,15 @@ return {
 
       dap.listeners.after.event_terminated[listener_id] = cleanup
       dap.listeners.after.event_exited[listener_id] = cleanup
+
+      -- Kill ONLY this task's own DAP session when the Overseer task is
+      -- disposed. A bare dap.terminate() would kill the focused session,
+      -- which is usually a different project.
+      task:subscribe("on_dispose", function()
+        if my_session and not finished then
+          my_session:disconnect({ terminateDebuggee = true })
+        end
+      end)
 
       return task
     end
