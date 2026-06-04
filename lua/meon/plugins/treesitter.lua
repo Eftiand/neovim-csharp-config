@@ -22,17 +22,62 @@ local ensure_installed = {
 	"gosum",
 }
 
+local highlight_filetypes = {
+	"lua",
+	"xml",
+	"html",
+	"css",
+	"vim",
+	"help",
+	"dockerfile",
+	"gitignore",
+	"query",
+	"cs",
+	"python",
+	"json",
+	"javascript",
+	"javascriptreact",
+	"typescript",
+	"typescriptreact",
+	"yaml",
+	"markdown",
+	"go",
+	"gomod",
+	"gosum",
+}
+
 return {
 	{
 		"nvim-treesitter/nvim-treesitter",
-		branch = "master",
+		branch = "main",
 		lazy = false,
 		build = ":TSUpdate",
 		config = function()
-			require("nvim-treesitter.configs").setup({
-				ensure_installed = ensure_installed,
-				highlight = { enable = true },
-				indent = { enable = true },
+			local ts = require("nvim-treesitter")
+			ts.setup({
+				install_dir = vim.fn.stdpath("data") .. "/site",
+			})
+
+			local installed = ts.get_installed and ts.get_installed("parsers") or {}
+			local installed_set = {}
+			for _, p in ipairs(installed) do
+				installed_set[p] = true
+			end
+			local missing = {}
+			for _, p in ipairs(ensure_installed) do
+				if not installed_set[p] then
+					table.insert(missing, p)
+				end
+			end
+			if #missing > 0 then
+				ts.install(missing)
+			end
+
+			vim.api.nvim_create_autocmd("FileType", {
+				pattern = highlight_filetypes,
+				callback = function(args)
+					pcall(vim.treesitter.start, args.buf)
+				end,
 			})
 		end,
 	},
