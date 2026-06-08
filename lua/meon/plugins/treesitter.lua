@@ -54,6 +54,19 @@ return {
 		build = ":TSUpdate",
 		config = function()
 			local ts = require("nvim-treesitter")
+
+			-- The `main` branch API exposes setup/get_installed/install. If the
+			-- plugin is checked out on the archived `master` branch these are nil,
+			-- so guard against it instead of hard-erroring during startup.
+			if type(ts.install) ~= "function" then
+				vim.notify(
+					"nvim-treesitter: `main` branch API missing (install). "
+						.. "Run :Lazy update nvim-treesitter to switch off the archived master branch.",
+					vim.log.levels.WARN
+				)
+				return
+			end
+
 			ts.setup({
 				install_dir = vim.fn.stdpath("data") .. "/site",
 			})
