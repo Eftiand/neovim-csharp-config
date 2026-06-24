@@ -102,6 +102,16 @@ return {
 						{ name = "buffer" },
 					},
 				})
+
+				-- Execute query (avoids <leader>S clash with snacks scratch)
+				vim.keymap.set("n", "<leader>sr", "<Plug>(DBUI_ExecuteQuery)", {
+					buffer = true,
+					desc = "Run DB query",
+				})
+				vim.keymap.set("v", "<leader>sr", "<Plug>(DBUI_ExecuteQuery)", {
+					buffer = true,
+					desc = "Run DB query (selection)",
+				})
 			end,
 		})
 	end,
