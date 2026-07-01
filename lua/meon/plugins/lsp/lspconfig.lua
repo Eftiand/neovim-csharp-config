@@ -155,9 +155,15 @@ return {
 			},
 		})
 
+		-- Servers handled by dedicated plugins (their own start_or_attach).
+		-- Skip them here so they don't double-attach.
+		local externally_managed = {
+			jdtls = true, -- handled by nvim-jdtls (jdt:// handler + decompiler bundles)
+		}
+
 		-- Configure all other servers with default capabilities
 		for _, server_name in ipairs(installed_servers) do
-			if server_name ~= "lua_ls" then
+			if server_name ~= "lua_ls" and not externally_managed[server_name] then
 				vim.lsp.config(server_name, {
 					capabilities = capabilities,
 				})
@@ -166,7 +172,9 @@ return {
 
 		-- Enable all installed LSP servers using the modern vim.lsp.enable() API
 		for _, server_name in ipairs(installed_servers) do
-			vim.lsp.enable(server_name)
+			if not externally_managed[server_name] then
+				vim.lsp.enable(server_name)
+			end
 		end
 	end,
 }

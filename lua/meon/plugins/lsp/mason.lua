@@ -36,6 +36,7 @@ return {
 				"cssls", -- CSS
 				"html", -- HTML
 				"pyright", -- Python
+				"jdtls", -- Java (Eclipse JDT Language Server)
 				--"gopls", -- Go
 			},
 		})
@@ -48,6 +49,8 @@ return {
 				"stylua",
 				"ruff", -- Python linter + formatter
 				"debugpy", -- Python debugger
+				"java-debug-adapter", -- Java debug adapter (nvim-dap via jdtls)
+				"java-test", -- Java test runner bundles
 				--"delve", -- Go debugger
 			},
 		})

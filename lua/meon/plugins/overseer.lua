@@ -186,15 +186,59 @@ return {
       return task
     end
 
+    -- Java debugging needs jdtls to have (a) loaded the java-debug bundle and
+    -- (b) finished importing the project, which registers the vscode.java.*
+    -- commands. Running before that yields cryptic "No LSP client found" errors,
+    -- so gate on it and tell the user to wait.
+    local function jdtls_ready()
+      for _, c in ipairs(vim.lsp.get_clients({ name = "jdtls" })) do
+        local cmds = (c.server_capabilities.executeCommandProvider or {}).commands or {}
+        if vim.tbl_contains(cmds, "vscode.java.startDebugSession") then
+          return true
+        end
+      end
+      return false
+    end
+
     local function run_config(config)
       local dap = require("dap")
 
+      if config.type == "java" and not jdtls_ready() then
+        vim.notify(
+          "jdtls isn't ready yet (open a .java file and let the project finish importing), then try again.",
+          vim.log.levels.WARN
+        )
+        return false
+      end
+
       if has_dap_adapter(config.type) then
+        -- Java's debug adapter defaults to console="integratedTerminal", which
+        -- launches the debuggee via a runInTerminal reverse-request that often
+        -- times out ("Failed to launch debuggee in terminal"). internalConsole
+        -- makes the adapter launch the JVM itself and stream stdout/stderr as DAP
+        -- output events -- which create_dap_task() already pipes to the panel.
+        if config.type == "java" and config.console == nil then
+          config.console = "internalConsole"
+        end
+
         create_dap_task(config.name)
-        dap.run(config)
+        local ok, err = pcall(dap.run, config)
+        if not ok then
+          vim.notify("dap.run failed: " .. tostring(err), vim.log.levels.ERROR)
+          return false
+        end
         return true
       else
-        return run_with_overseer(config) ~= nil
+        local ok = run_with_overseer(config) ~= nil
+        if not ok then
+          vim.notify(
+            ("No DAP adapter for type '%s' and no runnable command built from this config."):format(
+              tostring(config.type)
+            ),
+            vim.log.levels.ERROR
+          )
+        end
+        return ok
       end
     end
 
