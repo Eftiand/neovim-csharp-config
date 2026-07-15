@@ -81,18 +81,29 @@ keymap.set("n", "<leader>th", "<cmd>split | terminal<CR>", { desc = "Open termin
 keymap.set("n", "<leader>tv", "<cmd>vsplit | terminal<CR>", { desc = "Open terminal in vertical split" })
 
 -- Terminal window navigation (works in all terminal buffers except fzf-lua)
+-- Leaves terminal mode, then hands off to the herdr-aware nav so <C-h/j/k/l>
+-- crosses into herdr panes at a split edge just like in normal mode.
 vim.api.nvim_create_autocmd("TermOpen", {
   pattern = "*",
   callback = function()
     vim.defer_fn(function()
       if vim.bo.filetype == "fzf" then return end
 
+      local nav = require("meon.util.herdr-nav").nav
+      local esc = vim.api.nvim_replace_termcodes([[<C-\><C-n>]], true, false, true)
+      local function tnav(wincmd, dir)
+        return function()
+          vim.api.nvim_feedkeys(esc, "n", false)
+          vim.schedule(function() nav(wincmd, dir) end)
+        end
+      end
+
       local opts = { buffer = 0, silent = true }
       vim.keymap.set("t", "<C-q>", [[<C-\><C-n>]], opts)
-      vim.keymap.set("t", "<C-h>", [[<C-\><C-n><C-w>h]], opts)
-      vim.keymap.set("t", "<C-j>", [[<C-\><C-n><C-w>j]], opts)
-      vim.keymap.set("t", "<C-k>", [[<C-\><C-n><C-w>k]], opts)
-      vim.keymap.set("t", "<C-l>", [[<C-\><C-n><C-w>l]], opts)
+      vim.keymap.set("t", "<C-h>", tnav("h", "left"), opts)
+      vim.keymap.set("t", "<C-j>", tnav("j", "down"), opts)
+      vim.keymap.set("t", "<C-k>", tnav("k", "up"), opts)
+      vim.keymap.set("t", "<C-l>", tnav("l", "right"), opts)
     end, 10)
   end,
 })

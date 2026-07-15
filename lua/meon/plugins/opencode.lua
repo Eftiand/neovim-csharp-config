@@ -70,15 +70,23 @@ return {
 			end,
 		})
 
-		-- Tmux navigation in opencode terminal
+		-- herdr/tmux navigation in opencode terminal
 		vim.api.nvim_create_autocmd("FileType", {
 			pattern = "opencode_terminal",
 			callback = function(ev)
+				local nav = require("meon.util.herdr-nav").nav
+				local esc = vim.api.nvim_replace_termcodes([[<C-\><C-n>]], true, false, true)
+				local function tnav(wincmd, dir)
+					return function()
+						vim.api.nvim_feedkeys(esc, "n", false)
+						vim.schedule(function() nav(wincmd, dir) end)
+					end
+				end
 				local opts = { buffer = ev.buf, silent = true }
-				vim.keymap.set("t", "<C-h>", [[<C-\><C-n><cmd>TmuxNavigateLeft<cr>]], opts)
-				vim.keymap.set("t", "<C-j>", [[<C-\><C-n><cmd>TmuxNavigateDown<cr>]], opts)
-				vim.keymap.set("t", "<C-k>", [[<C-\><C-n><cmd>TmuxNavigateUp<cr>]], opts)
-				vim.keymap.set("t", "<C-l>", [[<C-\><C-n><cmd>TmuxNavigateRight<cr>]], opts)
+				vim.keymap.set("t", "<C-h>", tnav("h", "left"), opts)
+				vim.keymap.set("t", "<C-j>", tnav("j", "down"), opts)
+				vim.keymap.set("t", "<C-k>", tnav("k", "up"), opts)
+				vim.keymap.set("t", "<C-l>", tnav("l", "right"), opts)
 			end,
 		})
 	end,
