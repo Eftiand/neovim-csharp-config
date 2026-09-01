@@ -64,6 +64,7 @@
   "roslyn.nvim": { "branch": "main", "commit": "5461f098cde200046063bde02fba564c61e322ca" },
   "smear-cursor.nvim": { "branch": "main", "commit": "c85bdbb25db096fbcf616bc4e1357bd61fe2c199" },
   "snacks.nvim": { "branch": "main", "commit": "a049339328e2599ad6e85a69fa034ac501e921b2" },
+  "stocks-watchlist.nvim": { "branch": "main", "commit": "a43b96181cdd890b54af7119b958de7854cdd746" },
   "substitute.nvim": { "branch": "main", "commit": "0d2077398552f069abccbd964a26dd7cd26882cd" },
   "suda.vim": { "branch": "master", "commit": "c492741b4679b3cdd4d9e34138209784e061d916" },
   "todo-comments.nvim": { "branch": "main", "commit": "31e3c38ce9b29781e4422fc0322eb0a21f4e8668" },
