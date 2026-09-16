@@ -41,6 +41,11 @@ return {
 			},
 		})
 		mason_tool_installer.setup({
+			-- Defaults to checking (and hitting the registry) immediately on
+			-- startup. Push it past the first paint and only re-check daily.
+			run_on_start = true,
+			start_delay = 3000,
+			debounce_hours = 24,
 			ensure_installed = {
 				"eslint", -- JavaScript linter
 				"html", -- HTML

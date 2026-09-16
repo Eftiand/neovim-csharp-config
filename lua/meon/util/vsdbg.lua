@@ -24,24 +24,47 @@ function M.handshake(self, request_payload)
   })
 end
 
-function M.find_vsdbg()
-  local handle = io.popen("find ~/.vscode/extensions -path '*/ms-dotnettools.csharp-*/.debugger/arm64/vsdbg' 2>/dev/null | sort -V -r | head -1")
-  if handle then
-    local result = handle:read("*a"):gsub("%s+$", "")
-    handle:close()
-    if result ~= "" then return result end
+--- Compare two extension dir names by their embedded version, newest first.
+--- Plain string order is wrong here: "csharp-2.9.x" would beat "csharp-2.140.x".
+local function newer(a, b)
+  local a_parts, b_parts = {}, {}
+  for n in a:gmatch("%d+") do a_parts[#a_parts + 1] = tonumber(n) end
+  for n in b:gmatch("%d+") do b_parts[#b_parts + 1] = tonumber(n) end
+  for i = 1, math.max(#a_parts, #b_parts) do
+    local x, y = a_parts[i] or 0, b_parts[i] or 0
+    if x ~= y then return x > y end
   end
-  return nil
+  return false
+end
+
+local vsdbg_path = nil
+local searched = false
+
+--- Locate the vsdbg binary shipped with the VS Code C# extension.
+--- Uses a glob rather than shelling out to `find`: the old `io.popen("find
+--- ~/.vscode/extensions ...")` walked the whole extensions tree synchronously
+--- and cost ~870ms of startup on a cold cache. The result is cached, so a
+--- failed lookup is not retried on every debug session either.
+function M.find_vsdbg()
+  if searched then return vsdbg_path end
+  searched = true
+
+  local pattern = vim.fn.expand("~") .. "/.vscode/extensions/ms-dotnettools.csharp-*/.debugger/arm64/vsdbg"
+  local matches = vim.fn.glob(pattern, true, true)
+  table.sort(matches, newer)
+  vsdbg_path = matches[1]
+
+  return vsdbg_path
 end
 
 function M.get_adapter()
-  local vsdbg_path = M.find_vsdbg()
-  if not vsdbg_path then return nil end
+  local path = M.find_vsdbg()
+  if not path then return nil end
 
   return {
     id = "coreclr",
     type = "executable",
-    command = vsdbg_path,
+    command = path,
     args = { "--interpreter=vscode" },
     reverse_request_handlers = {
       handshake = M.handshake,

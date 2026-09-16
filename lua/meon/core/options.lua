@@ -60,11 +60,9 @@ vim.g.clipboard = {
 opt.splitright = true
 opt.splitbelow = true
 
--- Autosave on insert leave or when focus is lost
-vim.api.nvim_create_autocmd({ "InsertLeave", "FocusLost" }, {
-	pattern = "*",
-	command = "silent! write",
-})
+-- Autosave is handled by auto-save.nvim (debounced). A raw InsertLeave
+-- `write` autocmd used to live here and fired a second, undebounced,
+-- synchronous write on every insert-leave.
 
 -- Auto-reload files when changed externally
 opt.autoread = true

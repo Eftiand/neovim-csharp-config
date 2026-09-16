@@ -14,7 +14,16 @@ return {
       args = { "--interpreter=vscode" },
     }
 
-    dap.adapters.coreclr = require("meon.util.vsdbg").get_adapter()
+    -- Resolved on first use, not at startup: locating vsdbg touches the
+    -- filesystem, and most sessions never start a .NET debug session.
+    dap.adapters.coreclr = function(callback, _)
+      local adapter = require("meon.util.vsdbg").get_adapter()
+      if not adapter then
+        vim.notify("vsdbg not found - install the VS Code C# extension", vim.log.levels.ERROR)
+        return
+      end
+      callback(adapter)
+    end
 
     -- Python adapter (debugpy)
     local python_adapter = function(cb, config)

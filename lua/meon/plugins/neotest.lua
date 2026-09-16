@@ -123,7 +123,9 @@ end)
   },
   config = function()
     require("neotest").setup({
-      log_level = vim.log.levels.DEBUG,
+      -- DEBUG logs every file read during discovery; it had grown a 197MB
+      -- neotest.log and put a synchronous write in the discovery hot path.
+      log_level = vim.log.levels.WARN,
       icons = {
         running_animated = { "⠋", "⠙", "⠹", "⠸", "⠼", "⠴", "⠦", "⠧", "⠇", "⠏" },
       },
