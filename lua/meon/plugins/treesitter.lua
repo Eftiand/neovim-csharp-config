@@ -21,6 +21,7 @@ local ensure_installed = {
 	"go",
 	"gomod",
 	"gosum",
+	"http",
 }
 
 local highlight_filetypes = {
@@ -46,6 +47,7 @@ local highlight_filetypes = {
 	"go",
 	"gomod",
 	"gosum",
+	"http",
 }
 
 return {

@@ -18,6 +18,7 @@ A fully-featured Neovim configuration optimized for **C# / .NET development on m
 - macOS (ARM64/Apple Silicon)
 - Git
 - [fzf](https://github.com/junegunn/fzf) (for fuzzy finding)
+- `curl` and [tree-sitter CLI](https://github.com/tree-sitter/tree-sitter) (for rest.nvim's luarocks dependencies)
 - A [Nerd Font](https://www.nerdfonts.com/) (for icons)
 
 ## Installation
@@ -130,6 +131,19 @@ nvim
 | `sx` | Close split |
 | `<leader>sm` | Maximize/restore window |
 
+### HTTP Client (`.http` files)
+
+| Key | Action |
+|-----|--------|
+| `<leader>Rr` | Run request under cursor |
+| `<leader>Rf` | Pick a named request (`# @name foo`) and run it |
+| `<leader>Rl` | Re-run last request |
+| `<leader>Ro` | Open response pane |
+| `<leader>Rc` | Yank request as a `curl` command |
+
+Inside the response pane, `H`/`L` cycle between Response / Headers / Cookies / Statistics.
+`:Rest env select`, `:Rest cookies` and `:Rest logs` are available as commands.
+
 ### Other
 
 | Key | Action |
@@ -224,6 +238,7 @@ Testing uses [neotest](https://github.com/nvim-neotest/neotest) with [neotest-do
 - **[gitsigns.nvim](https://github.com/lewis6991/gitsigns.nvim)** - Git integration
 - **[todo-comments.nvim](https://github.com/folke/todo-comments.nvim)** - Highlight TODOs
 - **[which-key.nvim](https://github.com/folke/which-key.nvim)** - Keybinding hints
+- **[rest.nvim](https://github.com/rest-nvim/rest.nvim)** - HTTP client for `.http` files
 
 ## macOS Features
 
@@ -274,6 +289,16 @@ Edit `lua/meon/plugins/colorscheme.lua` to modify colors or switch themes.
 1. Run `:Lazy` to check plugin status
 2. Try `:Lazy sync` to update plugins
 3. Check for errors: `:messages`
+
+### rest.nvim stalls ~15s on every startup
+
+Its `tree-sitter-http` luarocks dependency failed to build, and a failed build
+wipes the rock tree so lazy retries it each launch. Install the build backend
+into the hererocks tree once, then restart:
+
+```sh
+~/.local/share/nvim/lazy-rocks/hererocks/bin/luarocks install luarocks-build-treesitter-parser
+```
 
 ## License
 
