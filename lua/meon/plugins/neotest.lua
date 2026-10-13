@@ -60,6 +60,15 @@ vim.schedule(function()
 end)
 ]],
             },
+            {
+              [[  local specs = build_spec_utils.create_specs(args.tree, nil, additional_args)
+]],
+              [[  local specs = build_spec_utils.create_specs(args.tree, nil, additional_args)
+  if not specs then
+    return nil
+  end
+]],
+            },
           },
           ["lua/neotest-dotnet/utils/build-spec-utils.lua"] = {
             {
@@ -68,7 +77,10 @@ end)
   -- table. neotest treats that as a single spec (`{ {} }`), runs it, and then
   -- crashes in `results` indexing `spec.context`. Returning nil is the
   -- documented "cannot run this position" signal.
-  return #specs == 0 and nil or specs]],
+  if #specs == 0 then
+    return nil
+  end
+  return specs]],
             },
           },
           ["lua/neotest-dotnet/nunit/init.lua"] = {
