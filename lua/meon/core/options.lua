@@ -7,7 +7,7 @@ vim.g.loaded_matchparen = 1
 local opt = vim.opt
 
 -- Faster UI responsiveness (CursorHold, gitsigns, diagnostics)
-opt.updatetime = 100
+opt.updatetime = 250
 opt.ttimeoutlen = 10
 
 -- Cache compiled Lua modules for faster startup
@@ -84,5 +84,45 @@ vim.api.nvim_create_autocmd("FileType", {
 	pattern = { "json", "jsonc" },
 	callback = function()
 		vim.bo.commentstring = "// %s"
+	end,
+})
+
+-- Disk write reduction. Every buffer write used to also create and delete a
+-- backup copy; with autosave running that doubled the file events for no
+-- benefit. Persistent undo replaces what the backup was protecting against.
+opt.writebackup = false
+opt.undofile = true
+
+-- Plugin logs never rotated and had grown to ~74 MB combined. Roslyn reports
+-- NuGet advisories and unresolved-dependency warnings on every didSave, none
+-- of which are actionable from inside the editor.
+vim.lsp.log.set_level(vim.log.levels.ERROR)
+
+vim.api.nvim_create_autocmd("VimEnter", {
+	once = true,
+	callback = function()
+		local logdir = vim.fn.stdpath("log")
+		local limit = 5 * 1024 * 1024
+		vim.uv.fs_scandir(logdir, function(err, dir)
+			if err or not dir then
+				return
+			end
+			while true do
+				local name, typ = vim.uv.fs_scandir_next(dir)
+				if not name then
+					return
+				end
+				if typ == "file" and name:match("%.log$") then
+					local path = logdir .. "/" .. name
+					local stat = vim.uv.fs_stat(path)
+					if stat and stat.size > limit then
+						local fd = vim.uv.fs_open(path, "w", 420)
+						if fd then
+							vim.uv.fs_close(fd)
+						end
+					end
+				end
+			end
+		end)
 	end,
 })

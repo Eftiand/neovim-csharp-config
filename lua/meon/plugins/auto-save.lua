@@ -5,7 +5,10 @@ return {
 		enabled = true,
 		trigger_events = {
 			immediate_save = { "BufLeave", "FocusLost" },
-			defer_save = { "InsertLeave", "TextChanged" },
+			-- TextChanged removed: it fires on every normal-mode edit (dd, p,
+			-- undo) and turned each typing pause into a full write cascade
+			-- (backup file + swap sync + conform + LSP didSave + lint).
+			defer_save = { "InsertLeave" },
 			cancel_deferred_save = { "InsertEnter" },
 		},
 		condition = function(buf)
@@ -15,7 +18,7 @@ return {
 			return vim.bo[buf].modifiable
 		end,
 		write_all_buffers = false,
-		debounce_delay = 135,
+		debounce_delay = 1500,
 		debug = false,
 	},
 }
