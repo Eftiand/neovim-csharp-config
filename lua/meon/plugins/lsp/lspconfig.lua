@@ -3,7 +3,20 @@ return {
 	event = { "BufReadPre", "BufNewFile" },
 	dependencies = {
 		"hrsh7th/cmp-nvim-lsp",
-		{ "antosha417/nvim-lsp-file-operations", config = true },
+		{
+			"antosha417/nvim-lsp-file-operations",
+			config = function()
+				-- The plugin writes every Log.debug() call to
+				-- ~/.cache/nvim/lsp-file-operations.log no matter what its `debug`
+				-- option is set to: the level check in log.lua:97 only guards
+				-- vim.notify, while write_output() on line 100 runs unconditionally.
+				-- Each call reads the whole file, truncates it and rewrites it, and
+				-- the debug calls sit in per-client, per-request paths. Stub them
+				-- before setup() so the integration messages go quiet too.
+				require("lsp-file-operations.log").debug = function() end
+				require("lsp-file-operations").setup()
+			end,
+		},
 		{ "folke/neodev.nvim", opts = {} },
 		"williamboman/mason.nvim",
 		"williamboman/mason-lspconfig.nvim",
