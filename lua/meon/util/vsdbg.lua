@@ -49,8 +49,13 @@ function M.find_vsdbg()
   if searched then return vsdbg_path end
   searched = true
 
-  local pattern = vim.fn.expand("~") .. "/.vscode/extensions/ms-dotnettools.csharp-*/.debugger/arm64/vsdbg"
-  local matches = vim.fn.glob(pattern, true, true)
+  -- The extension lays the binary out per platform: macOS arm64 under
+  -- `.debugger/arm64`, macOS intel under `.debugger/x86_64`, Linux under
+  -- `.debugger/vsdbg` (and `.debugger/<arch>/vsdbg` on newer builds). Glob
+  -- both shapes rather than hardcoding one.
+  local root = vim.fn.expand("~") .. "/.vscode/extensions/ms-dotnettools.csharp-*/.debugger/"
+  local matches = vim.fn.glob(root .. "*/vsdbg", true, true)
+  vim.list_extend(matches, vim.fn.glob(root .. "vsdbg", true, true))
   table.sort(matches, newer)
   vsdbg_path = matches[1]
 

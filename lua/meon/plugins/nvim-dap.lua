@@ -2,15 +2,23 @@ return {
   "mfussenegger/nvim-dap",
   lazy = false,
   dependencies = {
-    "Cliffback/netcoredbg-macOS-arm64.nvim",
+    -- Ships a prebuilt macOS/arm64 netcoredbg; useless (and a failed build) elsewhere.
+    { "Cliffback/netcoredbg-macOS-arm64.nvim", enabled = vim.fn.has("mac") == 1 },
   },
   config = function()
     local dap = require("dap")
 
     -- Adapters
+    -- netcoredbg: bundled binary on macOS, Mason's build on Linux, PATH as a
+    -- last resort.
+    local netcoredbg = vim.fn.stdpath("data") .. "/lazy/netcoredbg-macOS-arm64.nvim/netcoredbg/netcoredbg"
+    if vim.fn.executable(netcoredbg) == 0 then
+      local mason = vim.fn.stdpath("data") .. "/mason/bin/netcoredbg"
+      netcoredbg = vim.fn.executable(mason) == 1 and mason or "netcoredbg"
+    end
     dap.adapters.netcoredbg = {
       type = "executable",
-      command = vim.fn.stdpath("data") .. "/lazy/netcoredbg-macOS-arm64.nvim/netcoredbg/netcoredbg",
+      command = netcoredbg,
       args = { "--interpreter=vscode" },
     }
 

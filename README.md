@@ -1,6 +1,6 @@
 # Meon - Neovim Configuration for C# Development
 
-A fully-featured Neovim configuration optimized for **C# / .NET development on macOS**. Includes Roslyn LSP, debugging with netcoredbg, unit testing with Neotest, and 50+ carefully configured plugins.
+A fully-featured Neovim configuration optimized for **C# / .NET development on macOS and Linux**. Includes Roslyn LSP, debugging with netcoredbg, unit testing with Neotest, and 50+ carefully configured plugins.
 
 ## Features
 
@@ -9,13 +9,14 @@ A fully-featured Neovim configuration optimized for **C# / .NET development on m
 - **Unit Testing** - Neotest integration with test running and debugging
 - **.NET Build Integration** - Direct `dotnet build` with quickfix error navigation
 - **VS Code Compatibility** - Reads `launch.json` and `settings.json` configurations
-- **macOS ARM64 Optimized** - Native Apple Silicon debugger and clipboard support
+- **Cross-platform** - macOS (Apple Silicon) and Linux: platform-appropriate debugger, clipboard and file-manager integration
 
 ## Requirements
 
 - Neovim 0.9+
 - .NET SDK 8.0+
-- macOS (ARM64/Apple Silicon)
+- macOS (ARM64/Apple Silicon) or Linux
+- Linux only: a clipboard tool (`wl-clipboard` on Wayland, `xclip`/`xsel` on X11)
 - Git
 - [fzf](https://github.com/junegunn/fzf) (for fuzzy finding)
 - `curl` and [tree-sitter CLI](https://github.com/tree-sitter/tree-sitter) (for rest.nvim's luarocks dependencies)
@@ -240,12 +241,16 @@ Testing uses [neotest](https://github.com/nvim-neotest/neotest) with [neotest-do
 - **[which-key.nvim](https://github.com/folke/which-key.nvim)** - Keybinding hints
 - **[rest.nvim](https://github.com/rest-nvim/rest.nvim)** - HTTP client for `.http` files
 
-## macOS Features
+## Platform Integration
 
-- **System clipboard** - Uses `pbcopy`/`pbpaste` for seamless copy/paste
-- **ARM64 debugger** - Native Apple Silicon netcoredbg
-- **Finder integration** - `:Ofinder` reveals file in Finder
-- **Tmux navigation** - Seamless pane switching with vim-tmux-navigator
+| | macOS | Linux |
+|---|---|---|
+| Clipboard | `pbcopy`/`pbpaste` | Neovim's own detection (`wl-clipboard`, `xclip`, `xsel`) |
+| .NET debugger | bundled netcoredbg (Apple Silicon) | netcoredbg via Mason |
+| `vsdbg` lookup | `.debugger/arm64` or `.debugger/x86_64` | `.debugger/vsdbg` or `.debugger/<arch>/vsdbg` |
+| `:Ofinder` | reveals file in Finder (`open -R`) | reveals via Freedesktop FileManager1, else `xdg-open` on the folder |
+
+- **Tmux navigation** - Seamless pane switching with vim-tmux-navigator (both platforms)
 
 ## Customization
 
@@ -280,7 +285,7 @@ Edit `lua/meon/plugins/colorscheme.lua` to modify colors or switch themes.
 
 ### Debugger not working
 
-1. Verify netcoredbg path exists: `~/.local/share/nvim/lazy/netcoredbg-macOS-arm64.nvim/netcoredbg/netcoredbg`
+1. Verify the netcoredbg binary exists: macOS `~/.local/share/nvim/lazy/netcoredbg-macOS-arm64.nvim/netcoredbg/netcoredbg`, Linux `~/.local/share/nvim/mason/bin/netcoredbg`
 2. Check `launch.json` syntax is valid
 3. Ensure project is built before debugging
 

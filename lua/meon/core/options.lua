@@ -43,19 +43,23 @@ opt.backspace = "indent,eol,start"
 
 vim.opt.clipboard = "unnamedplus"
 
--- Ensure macOS clipboard provider is used
-vim.g.clipboard = {
-  name = 'macOS-clipboard',
-  copy = {
-    ['+'] = 'pbcopy',
-    ['*'] = 'pbcopy',
-  },
-  paste = {
-    ['+'] = 'pbpaste',
-    ['*'] = 'pbpaste',
-  },
-  cache_enabled = 0,
-}
+-- Pin the clipboard provider on macOS. On Linux, Neovim's own detection
+-- (wl-clipboard, xclip, xsel, ...) is left alone: hardcoding pbcopy there
+-- makes every yank fail with E319.
+if vim.fn.has("mac") == 1 then
+  vim.g.clipboard = {
+    name = 'macOS-clipboard',
+    copy = {
+      ['+'] = 'pbcopy',
+      ['*'] = 'pbcopy',
+    },
+    paste = {
+      ['+'] = 'pbpaste',
+      ['*'] = 'pbpaste',
+    },
+    cache_enabled = 0,
+  }
+end
 
 opt.splitright = true
 opt.splitbelow = true
@@ -71,10 +75,33 @@ vim.api.nvim_create_autocmd({ "FocusGained", "BufEnter" }, {
 	command = "checktime",
 })
 
+-- Reveal the current file in the system file manager.
 vim.api.nvim_create_user_command('Ofinder',
     function()
         local path = vim.api.nvim_buf_get_name(0)
-        os.execute('open -R ' .. path)
+        if path == '' then
+            vim.notify('No file in this buffer', vim.log.levels.WARN)
+            return
+        end
+        local cmd
+        if vim.fn.has('mac') == 1 then
+            cmd = { 'open', '-R', path }
+        elseif vim.fn.executable('dbus-send') == 1 then
+            -- Freedesktop FileManager1: selects the file, like `open -R`.
+            cmd = {
+                'dbus-send', '--session', '--print-reply',
+                '--dest=org.freedesktop.FileManager1',
+                '/org/freedesktop/FileManager1',
+                'org.freedesktop.FileManager1.ShowItems',
+                'array:string:file://' .. path, 'string:""',
+            }
+        elseif vim.fn.executable('xdg-open') == 1 then
+            cmd = { 'xdg-open', vim.fs.dirname(path) }
+        else
+            vim.notify('No file manager opener found', vim.log.levels.ERROR)
+            return
+        end
+        vim.system(cmd, { detach = true })
     end,
     {}
 )

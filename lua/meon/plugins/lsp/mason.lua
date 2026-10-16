@@ -40,24 +40,32 @@ return {
 				--"gopls", -- Go
 			},
 		})
+		local tools = {
+			"eslint", -- JavaScript linter
+			"html", -- HTML
+			"jsonls", -- JSON
+			"prettier", -- prettier formatter
+			"stylua",
+			"ruff", -- Python linter + formatter
+			"debugpy", -- Python debugger
+			"java-debug-adapter", -- Java debug adapter (nvim-dap via jdtls)
+			"java-test", -- Java test runner bundles
+			--"delve", -- Go debugger
+		}
+
+		-- macOS gets netcoredbg prebuilt from netcoredbg-macOS-arm64.nvim;
+		-- elsewhere Mason supplies it, so the .NET adapter has a binary to run.
+		if vim.fn.has("mac") == 0 then
+			table.insert(tools, "netcoredbg")
+		end
+
 		mason_tool_installer.setup({
 			-- Defaults to checking (and hitting the registry) immediately on
 			-- startup. Push it past the first paint and only re-check daily.
 			run_on_start = true,
 			start_delay = 3000,
 			debounce_hours = 24,
-			ensure_installed = {
-				"eslint", -- JavaScript linter
-				"html", -- HTML
-				"jsonls", -- JSON
-				"prettier", -- prettier formatter
-				"stylua",
-				"ruff", -- Python linter + formatter
-				"debugpy", -- Python debugger
-				"java-debug-adapter", -- Java debug adapter (nvim-dap via jdtls)
-				"java-test", -- Java test runner bundles
-				--"delve", -- Go debugger
-			},
+			ensure_installed = tools,
 		})
 	end,
 }
