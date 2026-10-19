@@ -19,7 +19,21 @@ return {
 				local log = require("lsp-file-operations.log")
 				log.debug = function() end
 				log.setup = function() end
-				require("lsp-file-operations").setup()
+				local lfo = require("lsp-file-operations")
+				-- nvim-tree's FolderCreated/FolderRemoved send { folder_name }, but
+				-- did_create/did_delete validate { fname }, so folder ops error with
+				-- "vim/_core/shared.lua:0: invalid arguments". The subscriber looks the
+				-- callback up on the module per call, so wrapping it here is enough.
+				for _, name in ipairs({ "did_create", "did_delete" }) do
+					local cb = lfo[name]
+					lfo[name] = function(args)
+						if args and args.folder_name then
+							args = { fname = args.folder_name }
+						end
+						return cb(args)
+					end
+				end
+				lfo.setup()
 			end,
 		},
 		{ "folke/neodev.nvim", opts = {} },
