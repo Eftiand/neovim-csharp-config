@@ -13,7 +13,12 @@ return {
 				-- Each call reads the whole file, truncates it and rewrites it, and
 				-- the debug calls sit in per-client, per-request paths. Stub them
 				-- before setup() so the integration messages go quiet too.
-				require("lsp-file-operations.log").debug = function() end
+				-- Log.setup() also starts a 30s timer that opens the log with "w"
+				-- (truncating it, and leaking the fd when it is under 1MiB) in every
+				-- nvim instance, so stub that as well.
+				local log = require("lsp-file-operations.log")
+				log.debug = function() end
+				log.setup = function() end
 				require("lsp-file-operations").setup()
 			end,
 		},
