@@ -54,7 +54,9 @@ function M.find_vsdbg()
   -- `.debugger/vsdbg` (and `.debugger/<arch>/vsdbg` on newer builds). Glob
   -- both shapes rather than hardcoding one.
   local root = vim.fn.expand("~") .. "/.vscode/extensions/ms-dotnettools.csharp-*/.debugger/"
-  local matches = vim.fn.glob(root .. "*/vsdbg", true, true)
+  -- macOS ships both arch dirs side by side, so restrict to this machine's.
+  local arch = vim.uv.os_uname().machine == "x86_64" and "x86_64" or "arm64"
+  local matches = vim.fn.glob(root .. arch .. "/vsdbg", true, true)
   vim.list_extend(matches, vim.fn.glob(root .. "vsdbg", true, true))
   table.sort(matches, newer)
   vsdbg_path = matches[1]
