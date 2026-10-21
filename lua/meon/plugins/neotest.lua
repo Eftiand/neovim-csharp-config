@@ -17,6 +17,10 @@ return {
       --     nvim-treesitter never loads there and the `cs` -> `c_sharp` parser
       --     alias is missing, making every parse fail with
       --     `No parser for language "cs"`.
+      -- The patches leave the checkout dirty, and Lazy refuses to update a
+      -- dirty plugin before `build` gets a chance to run, so pin it. Upstream
+      -- is dormant; unpin and `git checkout .` in the plugin dir to pull.
+      pin = true,
       build = function(plugin)
         local patches = {
           ["lua/neotest-dotnet/framework-discovery.lua"] = {

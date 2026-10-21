@@ -4,6 +4,9 @@ return {
     ---@module 'roslyn.config'
     ---@type RoslynNvimConfig
     opts = {
+        -- Let Roslyn watch files itself; nvim's watcher floods it with
+        -- didChangeWatchedFiles on this large solution and slows navigation.
+        filewatching = "roslyn",
         config = {
             settings = {
                 ["csharp|background_analysis"] = {
