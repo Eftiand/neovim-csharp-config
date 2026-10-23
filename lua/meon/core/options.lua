@@ -59,6 +59,25 @@ if vim.fn.has("mac") == 1 then
     },
     cache_enabled = 0,
   }
+elseif vim.env.SSH_TTY or vim.env.SSH_CONNECTION then
+  -- Over SSH there is no local display, so copy to the client machine's
+  -- clipboard via OSC 52. Paste reads the unnamed register instead of
+  -- querying the terminal, which many terminals block or prompt for.
+  local osc52 = require('vim.ui.clipboard.osc52')
+  local function paste()
+    return { vim.fn.split(vim.fn.getreg(''), '\n'), vim.fn.getregtype('') }
+  end
+  vim.g.clipboard = {
+    name = 'OSC 52',
+    copy = {
+      ['+'] = osc52.copy('+'),
+      ['*'] = osc52.copy('*'),
+    },
+    paste = {
+      ['+'] = paste,
+      ['*'] = paste,
+    },
+  }
 end
 
 opt.splitright = true

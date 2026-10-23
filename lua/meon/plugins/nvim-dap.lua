@@ -24,13 +24,16 @@ return {
 
     -- Resolved on first use, not at startup: locating vsdbg touches the
     -- filesystem, and most sessions never start a .NET debug session.
+    -- Without the VS Code C# extension (no vsdbg), fall back to netcoredbg.
     dap.adapters.coreclr = function(callback, _)
       local adapter = require("meon.util.vsdbg").get_adapter()
-      if not adapter then
-        vim.notify("vsdbg not found - install the VS Code C# extension", vim.log.levels.ERROR)
-        return
+      if adapter then
+        callback(adapter)
+      elseif vim.fn.executable(netcoredbg) == 1 then
+        callback(dap.adapters.netcoredbg)
+      else
+        vim.notify("No .NET debugger found - install netcoredbg via :MasonInstall netcoredbg", vim.log.levels.ERROR)
       end
-      callback(adapter)
     end
 
     -- Python adapter (debugpy)
