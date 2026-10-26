@@ -78,5 +78,10 @@ return {
 		keymap.set("n", "<leader>ft", function()
 			fzf.grep({ search = "TODO|HACK|PERF|NOTE|FIX", no_esc = true })
 		end, { desc = "Find todos" })
+
+		-- <CR> cd into worktree, <C-a> add (from query), <C-x> remove
+		keymap.set("n", "<leader>gw", function()
+			fzf.git_worktrees()
+		end, { desc = "Git worktrees (switch/add/remove)" })
 	end,
 }
