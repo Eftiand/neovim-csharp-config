@@ -32,10 +32,10 @@ end
 -- DAP exception mode component
 local function dap_exception_component()
 	local mode = _G.dap_exception_mode
-	if not mode or mode == "off" then
+	if not mode or mode == "unhandled" then
 		return ""
 	elseif mode == "user-unhandled" then
-		return "Ex:unhandled"
+		return "Ex:user"
 	else
 		return "Ex:ALL"
 	end
