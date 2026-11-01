@@ -92,23 +92,56 @@ return {
       dap.list_breakpoints()
       require("fzf-lua").quickfix()
     end, { desc = "Find breakpoints" })
-    -- Exception breakpoint toggle (global for lualine)
-    _G.dap_exception_mode = "off"
-    dap.set_exception_breakpoints({})
-    vim.keymap.set("n", "<leader>dx", function()
-      if _G.dap_exception_mode == "off" then
-        _G.dap_exception_mode = "user-unhandled"
-        dap.set_exception_breakpoints({ "user-unhandled" })
-        vim.notify("Exceptions: user-unhandled", vim.log.levels.INFO)
-      elseif _G.dap_exception_mode == "user-unhandled" then
-        _G.dap_exception_mode = "all"
-        dap.set_exception_breakpoints({ "all" })
-        vim.notify("Exceptions: ALL", vim.log.levels.WARN)
-      else
-        _G.dap_exception_mode = "off"
-        dap.set_exception_breakpoints({})
-        vim.notify("Exceptions: OFF", vim.log.levels.INFO)
+    -- Exception breakpoints (mode is global so lualine can show it).
+    -- dap.set_exception_breakpoints() only affects the *running* session, so
+    -- new sessions would otherwise get the adapter's own default (vsdbg uses
+    -- "user-unhandled", which stops on every exception the ASP.NET pipeline
+    -- catches, e.g. a missing file in an endpoint). Instead, the mode is
+    -- written into dap.defaults[type] so it applies to every new session too.
+    --
+    --   unhandled      (default) only exceptions that would crash the process,
+    --                  e.g. a startup failure in Program.cs / app entrypoint
+    --   user-unhandled exceptions leaving user code, even if a framework catches
+    --                  them (endpoint exceptions)
+    --   all            every thrown exception
+    --
+    -- .NET debuggers always break on truly unhandled exceptions, so an empty
+    -- filter list there means "unhandled only". debugpy needs "uncaught".
+    local exception_filters = {
+      ["unhandled"] = { dotnet = {}, python = { "uncaught" } },
+      ["user-unhandled"] = { dotnet = { "user-unhandled" }, python = { "userUnhandled" } },
+      ["all"] = { dotnet = { "all" }, python = { "raised", "uncaught" } },
+    }
+    local adapter_family = {
+      coreclr = "dotnet",
+      netcoredbg = "dotnet",
+      python = "python",
+      debugpy = "python",
+    }
+    local exception_modes = { "unhandled", "user-unhandled", "all" }
+
+    local function set_exception_mode(mode)
+      _G.dap_exception_mode = mode
+      for type, family in pairs(adapter_family) do
+        dap.defaults[type].exception_breakpoints = exception_filters[mode][family]
       end
-    end, { desc = "Toggle exception breakpoints" })
+      local session = dap.session()
+      local family = session and adapter_family[session.config.type]
+      if family then
+        session:set_exception_breakpoints(exception_filters[mode][family])
+      end
+    end
+    set_exception_mode("unhandled")
+
+    vim.keymap.set("n", "<leader>dx", function()
+      local next_mode = exception_modes[1]
+      for i, m in ipairs(exception_modes) do
+        if m == _G.dap_exception_mode then
+          next_mode = exception_modes[i % #exception_modes + 1]
+        end
+      end
+      set_exception_mode(next_mode)
+      vim.notify("Exceptions: " .. next_mode, next_mode == "all" and vim.log.levels.WARN or vim.log.levels.INFO)
+    end, { desc = "Cycle exception breakpoints (unhandled/user-unhandled/all)" })
   end,
 }
